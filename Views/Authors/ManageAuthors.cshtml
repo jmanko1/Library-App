@@ -1,0 +1,28 @@
+﻿@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@{
+    ViewData["Title"] = "Zarządzaj autorami - ";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@model IEnumerable<LibraryApp.Models.DTOs.AuthorDTO>
+
+<div class="container mt-5" style="max-width: 600px;" id="authors-container">
+    <div class="row justify-content-center mb-4">
+        <div class="col text-center">
+            <h1 style="font-size: 20px; font-weight:bold;">Zarządzanie autorami</h1>
+        </div>
+    </div>
+    <div class="row justify-content-center mb-4">
+        <div class="col">
+            <form onsubmit="searchAuthor(event)">
+                <fieldset class="text-center">
+                    <input id="author-pattern" type="search" class="form-control" placeholder="Wyszukaj autora...">
+                </fieldset>
+            </form>
+        </div>
+    </div>
+</div>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+<script src="~/js/searchAuthor.js"></script>

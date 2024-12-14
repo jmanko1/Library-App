@@ -1,0 +1,44 @@
+﻿@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "Wyniki wyszukiwania - ";
+}
+
+@model IEnumerable<LibraryApp.Models.DTOs.BookDTO>
+
+<div class="container mt-5" style="max-width: 700px;">
+    <div class="row justify-content-center mb-4">
+        <div class="col text-center">
+            <h1 style="font-size: 20px; font-weight: bold;">Liczba wyników: @Model.Count()</h1>
+        </div>
+    </div>
+    @{
+        foreach(var book in Model)
+        {
+            <div class="row justify-content-center mb-3 align-items-center border p-3">   
+                <div class="col-2 d-none d-md-inline">
+                    <img src="/images/book.png" height="80" width="80">
+                </div>
+                <div class="col">
+                    <div>
+                        <h2 style="font-size: 17px; margin-bottom: 3px;">
+                            <a href="/books/@book.BookId" class="fw-bold text-decoration-none">@book.Title</a>
+                        </h2>
+                    </div>
+                    <div class="mb-1">@book.Author.FirstName @book.Author.LastName</div>
+                    @if(book.AvailableCopies > 0)
+                    {
+                        <div class="badge bg-success">Dostępny</div>
+                    }
+                    else
+                    {
+                        <div class="badge bg-danger">Niedostępny</div>
+                    }
+                </div>
+            </div>
+        }
+    }
+</div>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>

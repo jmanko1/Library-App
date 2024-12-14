@@ -1,0 +1,256 @@
+﻿@using LibraryApp.Models.Entities
+@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "Moje konto - ";
+}
+
+@model LibraryApp.Models.DTOs.UserDTO
+
+<div class="container mt-5">
+    <div class="row">
+        <div class="col">
+            <ul class="nav nav-tabs justify-content-center">
+                <li class="nav-item">
+                    <span id="loansSpan" class="nav-link active" style="cursor:pointer;" onclick="changeView(1)">Wypożyczenia</span>
+                </li>
+                <li class="nav-item">
+                    <span id="reservationsSpan" class="nav-link" style="cursor:pointer;" onclick="changeView(2)">Rezerwacje</span>
+                </li>
+                <li class="nav-item">
+                    <span id="userdataSpan" class="nav-link" style="cursor:pointer;" onclick="changeView(3)">Dane osobowe</span>
+                </li>
+            </ul>
+        </div>
+    </div>
+    <div class="row justify-content-center mt-5 d-none" id="userdata">
+        <div class="col-6 border p-4">
+            <div id="name">@Model.FirstName @Model.LastName</div>
+            <div id="street">@Model.Street</div>
+            <div id="city">@Model.City</div>
+            <hr />
+            <div class="mt-3" id="role">Rola: @Model.Role.ToString()</div>
+            <div id="email">Adres email: @Model.Email</div>
+            <div id="signupdate">Data rejestracji: @Model.SignupDate</div>
+            <div id="buttons" class="mt-3">
+                <a href="/users/settings" style="text-decoration:none;">
+                    <button type="button" class="btn btn-primary">Ustawienia konta</button>
+                </a>
+                <a href="/users/logout" class="ms-2" style="text-decoration:none;">
+                    <button type="button" class="btn btn-primary">Wyloguj się</button>
+                </a>
+            </div>
+        </div>
+    </div>
+    <div class="row justify-content-center mt-5" id="loans">
+        <div class="col">
+            <div class="container">
+                <div class="row justify-content-center mb-3">
+                    <div class="col offset-3">
+                        <div class="dropdown">
+                            <button id="dropdown-loans-content" class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                Aktywne wypożyczenia
+                            </button>
+                            <ul class="dropdown-menu">
+                                <li class="dropdown-item" style="cursor:pointer;" onclick="showActiveLoans()">Aktywne wypożyczenia</li>
+                                <li class="dropdown-item" style="cursor:pointer;" onclick="showFinishedLoans()">Zakończone wypożyczenia</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                @{
+                    var actualLoans = Model.Loans.Where(l => l.Status == LoanStatus.Trwające.ToString()).OrderByDescending(l => l.DateFrom);
+                    var finishedLoans = Model.Loans.Where(l => l.Status == LoanStatus.Zakończone.ToString()).OrderByDescending(l => l.DateFrom);
+
+                    int i = 1;
+                    foreach (var actualLoan in actualLoans)
+                    {
+                        var daysLeft = (actualLoan.DateTo.ToDateTime(TimeOnly.MinValue) - DateOnly.FromDateTime(DateTime.Now).ToDateTime(TimeOnly.MinValue)).TotalDays;
+
+                        <div class="row justify-content-center mb-2 actualLoanClass align-items-center">
+                            <div class="col offset-3">
+                                <div class="accordion" id="actualLoanAccordion_@i">
+                                    <div class="accordion-item">
+                                        <h2 class="accordion-header">
+                                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#actualLoan_@i" aria-expanded="true" aria-controls="collapseOne">
+                                                <div>
+                                                     <div class="mb-1">Wypożyczenie @i</div>
+                                                     <div class="mb-1">Data wypożyczenia: @actualLoan.DateFrom</div>
+                                                     <div>Termin zwrotu:
+                                                        <span id="date-to_@i">@actualLoan.DateTo</span>
+                                                     </div>
+                                                     @if (daysLeft >= 0)
+                                                     {
+                                                        <div class="badge bg-primary mt-2" id="days_left_@i">Pozostało dni: @daysLeft</div>
+                                                     }
+                                                     else
+                                                     {
+                                                        <div class="badge bg-danger mt-2">Dni opóźnienia: @(-1 * daysLeft)</div>
+                                                        <div class="badge bg-danger">Naliczona opłata: @($"{-0.5 * daysLeft:F2}") zł</div>
+                                                     }
+                                                     
+                                                </div>
+                                            </button>
+                                        </h2>
+                                        <div id="actualLoan_@i" class="accordion-collapse collapse" data-bs-parent="#actualLoanAccordion_@i">
+                                            <div class="accordion-body">
+                                                <ul>
+                                                    @foreach (var book in actualLoan.Books)
+                                                    {
+                                                        <li>@book.Author.FirstName @book.Author.LastName - @book.Title</li>
+                                                    }
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-3">
+                                <button class="btn btn-primary" role="button" onclick="extendLoan(@actualLoan.LoanId, @i)">Przedłuż wypożyczenie</button>
+                            </div>
+                        </div>
+
+                        i++;
+                    }
+
+                    i = 1;
+                    foreach (var finishedLoan in finishedLoans)
+                    {
+                        <div class="row justify-content-center mb-2 finishedLoanClass d-none">
+                            <div class="col-6">
+                                <div class="accordion" id="finishedLoanAccordion_@i">
+                                    <div class="accordion-item">
+                                        <h2 class="accordion-header">
+                                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#finishedLoan_@i" aria-expanded="true" aria-controls="collapseOne">
+                                                <div>
+                                                    <div class="mb-1">Wypożyczenie @i</div>
+                                                    <div class="mb-1">Data wypożyczenia: @finishedLoan.DateFrom</div>
+                                                    <div>Data zwrotu: @finishedLoan.DateTo</div>
+                                                </div>
+                                            </button>
+                                        </h2>
+                                        <div id="finishedLoan_@i" class="accordion-collapse collapse" data-bs-parent="#finishedLoanAccordion_@i">
+                                            <div class="accordion-body">
+                                                <ul>
+                                                    @foreach (var book in finishedLoan.Books)
+                                                    {
+                                                        <li>@book.Author.FirstName @book.Author.LastName - @book.Title</li>
+                                                    }
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        i++;
+                    }
+                }
+            </div>
+        </div>
+    </div>
+    <div class="row justify-content-center mt-5 d-none" id="reservations">
+        <div class="col">
+            <div class="container">
+                <div class="row justify-content-center mb-3">
+                    <div class="col offset-3">
+                        <div class="dropdown">
+                            <button id="dropdown-reservations-content" class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                Aktywne rezerwacje
+                            </button>
+                            <ul class="dropdown-menu">
+                                <li class="dropdown-item" style="cursor:pointer;" onclick="showActiveReservations()">Aktywne rezerwacje</li>
+                                <li class="dropdown-item" style="cursor:pointer;" onclick="showCancelledReservations()">Anulowane rezerwacje</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                @{
+                    var actualReservations = Model.Loans.Where(l => l.Status == LoanStatus.Zarezerwowane.ToString()).OrderByDescending(l => l.DateFrom); ;
+                    var cancelledReservations = Model.Loans.Where(l => l.Status == LoanStatus.Anulowane.ToString()).OrderByDescending(l => l.DateFrom); ;
+
+                    i = 1;
+                    foreach (var actualReservation in actualReservations)
+                    {
+                        <div class="row justify-content-center mb-2 actualReservationClass align-items-center">
+                            <div class="col offset-3">
+                                <div class="accordion" id="actualReservationAccordion_@i">
+                                    <div class="accordion-item">
+                                        <h2 class="accordion-header">
+                                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#actualReservation_@i" aria-expanded="true" aria-controls="collapseOne">
+                                                <div>
+                                                    <div class="mb-1">Rezerwacja @i</div>
+                                                    <div class="mb-1">Data rezerwacji: @actualReservation.DateFrom</div>
+                                                    <div>Termin rezerwacji:
+                                                        <span>@actualReservation.DateTo</span>
+                                                    </div>
+                                                    <div class="badge bg-danger mt-2 d-none" id="reservation-info_@i">Rezerwacja anulowana</div>
+                                                </div>
+                                            </button>
+                                        </h2>
+                                        <div id="actualReservation_@i" class="accordion-collapse collapse" data-bs-parent="#actualReservationAccordion_@i">
+                                            <div class="accordion-body">
+                                                <ul>
+                                                    @foreach (var book in actualReservation.Books)
+                                                    {
+                                                        <li>@book.Author.FirstName @book.Author.LastName - @book.Title</li>
+                                                    }
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-3">
+                                <button id="cancel_button_@i" class="btn btn-primary" onclick="cancelReservation(@actualReservation.LoanId, @i)" role="button">Anuluj rezerwację</button>
+                            </div>
+                        </div>
+
+                        i++;
+                    }
+
+                    i = 1;
+                    foreach (var cancelledReservation in cancelledReservations)
+                    {
+                        <div class="row justify-content-center mb-2 cancelledReservationClass d-none">
+                            <div class="col-6">
+                                <div class="accordion" id="cancelledReservationAccordion_@i">
+                                    <div class="accordion-item">
+                                        <h2 class="accordion-header">
+                                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#cancelledReservation_@i" aria-expanded="true" aria-controls="collapseOne">
+                                                <div>
+                                                    <div class="mb-1">Rezerwacja @i</div>
+                                                    <div class="mb-1">Data rezerwacji: @cancelledReservation.DateFrom</div>
+                                                    <div>Data anulowania rezerwacji: @cancelledReservation.DateTo</div>
+                                                </div>
+                                            </button>
+                                        </h2>
+                                        <div id="cancelledReservation_@i" class="accordion-collapse collapse" data-bs-parent="#cancelledReservationAccordion_@i">
+                                            <div class="accordion-body">
+                                                <ul>
+                                                    @foreach (var book in cancelledReservation.Books)
+                                                    {
+                                                        <li>@book.Author.FirstName @book.Author.LastName - @book.Title</li>
+                                                    }
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        i++;
+                    }
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+<script src="~/js/profileView.js"></script>
+<script src="~/js/profileLoans.js"></script>

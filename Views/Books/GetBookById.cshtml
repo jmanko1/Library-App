@@ -1,0 +1,136 @@
+﻿@using LibraryApp.Models.Entities;
+@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+
+@model LibraryApp.Models.DTOs.BookDTO
+
+@{
+    ViewData["Title"] = Model.Title + " - ";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    @inject Microsoft.AspNetCore.Http.IHttpContextAccessor HttpContextAccessor
+}
+<div class="container mt-5" style="max-width: 700px;">
+    <div class="row justify-content-center align-items-center border p-3">
+        <div class="col-2 d-none d-md-inline">
+            <img src="/images/book.png" height="80" width="80">
+        </div>
+        <div class="col">
+            <div>
+                <h1 style="font-size: 17px; margin-bottom: 3px; font-weight:bold;" id="title">
+                    @Model.Title
+                </h1>
+            </div>
+            <div class="mb-1" id="author">@Model.Author.FirstName @Model.Author.LastName</div>
+            @if (Model.AvailableCopies > 0)
+            {
+                <div class="badge bg-success">Dostępny</div>
+            }
+            else
+            {
+                <div class="badge bg-danger">Niedostępny</div>
+            }
+            <div id="deleted-info" class="badge bg-danger d-none">Usunięty</div>
+        </div>
+        @{
+            var role = HttpContextAccessor.HttpContext.Session.GetInt32("Role");
+            if(role == (int)Role.Administrator)
+            {
+                <div class="col text-end">
+                    <button class="btn btn-danger" onclick="removeBook()">Usuń</button>
+                </div>
+            }
+        }
+    </div>
+    <div class="row justify-content-center align-items-center border-start border-end p-3">
+        <div class="col">
+            <h2 style="font-size: 16px;">Rezerwacja</h2>
+            @if(Model.AvailableCopies > 0)
+            {
+                var userId = HttpContextAccessor.HttpContext.Session.GetInt32("UserId");
+
+                if (userId == null)
+                {
+                    <div style="margin-bottom:0px;" class="alert alert-success" role="alert">Zaloguj się, by zarezerwować ten tytuł.</div>
+
+                }
+                else
+                {
+                    <div id="cart-action"></div>
+                }
+            }
+            else
+            {
+                <div style="margin-bottom:0px;" class="alert alert-danger" role="alert">Rezerwacja niedostępna.</div>
+            }
+        </div>
+    </div>
+    <div class="row justify-content-center align-items-center border p-3">
+        <div class="col">
+            <h2 style="font-size: 16px;">Szczegóły</h2>
+            <div>
+                <span class="fw-bold">Tytuł:</span>
+                <span id="title-span">@Model.Title</span>
+            </div>
+            <div>
+                <span class="fw-bold">Autor:</span>
+                <span id="author-span">@Model.Author.FirstName  @Model.Author.LastName</span>
+            </div>
+            @{
+                var unavailableCopies = Model.Quantity - Model.AvailableCopies;
+                if (role != null && (role == (int)Role.Administrator || role == (int)Role.Pracownik))
+                {
+                    <div>
+                        <span class="fw-bold">Liczba wszystkich egzemplarzy:</span>
+                        <span id="all-copies">@Model.Quantity</span>
+                    </div>
+                    <div>
+                        <span class="fw-bold">Liczba dostępnych egzemplarzy:</span>
+                        <span id="available-copies">@Model.AvailableCopies</span>
+                    </div>
+                    <div>
+                        <span class="fw-bold">Liczba wypożyczonych lub zarezerwowanych egzemplarzy:</span>
+                        <span id="unavailable-copies">@unavailableCopies</span>
+                    </div>
+                }
+            }
+        </div>
+    </div>
+    @if(role != null && role == (int)Role.Administrator)
+    {
+        <div class="row justify-content-center border-start border-end border-bottom p-3">
+            <div class="col">
+                <form onsubmit="updateBook(event)" oninput="clearFeedback()">
+                    <fieldset class="text-center">
+                        <h2 class="mb-3" style="font-size: 16px; font-weight: bold;">Edytuj dane tego tytułu</h2>
+                        <div class="mb-3">
+                            <label class="form-label" for="newTitle">Tytuł:</label>
+                            <input type="text" class="form-control" id="newTitle" value="@Model.Title" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label" for="newAuthor">Autor:</label>
+                            <select id="newAuthor" class="form-select" required>
+                                <option value=@Model.Author.AuthorId selected>@Model.Author.FirstName @Model.Author.LastName</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label" for="newQuantity">Liczba wszystkich egzemplarzy:</label>
+                            <input type="number" class="form-control" id="newQuantity" value=@Model.Quantity required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Zaktualizuj</button>
+                        <div id="feedback" class="mt-3"></div>
+                    </fieldset>
+                </form>
+            </div>
+        </div>
+    }
+</div>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+@{
+    if(role == (int)Role.Administrator)
+    {
+        <script src="~/js/updateBook.js"></script>
+        <script src="~/js/removeBook.js"></script>
+    }
+}

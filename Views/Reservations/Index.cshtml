@@ -1,0 +1,76 @@
+﻿@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "Rezerwacje - ";
+}
+
+@model IEnumerable<LibraryApp.Models.DTOs.LoanDTO>
+
+<div class="container mt-5">
+    <div class="row justify-content-center mb-4">
+        <div class="col text-center">
+            <h1 style="font-size: 20px; font-weight: bold;">Rezerwacje</h1>
+        </div>
+    </div>
+    <div class="row justify-content-center mb-4">
+        <div class="col text-center">
+            <button type="button" class="btn btn-primary" onclick="cancelExpiredReservations()">Anuluj przestarzałe rezerwacje</button>
+        </div>
+    </div>
+    <div class="row justify-content-center mb-4">
+        <div class="col-4">
+            <input type="text" id="filter-input" class="form-control" placeholder="Filtruj po imieniu i nazwisku...">
+        </div>
+    </div>
+    @{
+        var reservations = Model.OrderByDescending(r => r.DateFrom);
+        var i = 1;
+
+        foreach (var reservation in reservations)
+        {
+            <div class="row justify-content-center mb-3 align-items-center">
+                <div class="col offset-3">
+                    <div class="accordion" id="reservationAccordion_@i">
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#reservation_@i" aria-expanded="true" aria-controls="collapseOne">
+                                    <div>
+                                        <div class="mb-1">@reservation.User.FirstName @reservation.User.LastName</div>
+                                        <div class="mb-1">@reservation.User.Email</div>
+                                        <div class="mb-3">@reservation.User.Street, @reservation.User.City</div>
+                                        <div class="mb-1">Data rezerwacji: @reservation.DateFrom</div>
+                                        <div>
+                                            Termin rezerwacji:
+                                            <span>@reservation.DateTo</span>
+                                        </div>
+                                        <div class="badge bg-success mt-2 d-none" id="reservation-start-info_@reservation.LoanId">Wypożyczenie rozpoczęte</div>
+                                        <div class="badge bg-danger mt-2 d-none" id="reservation-cancel-info_@reservation.LoanId">Rezerwacja anulowana</div>
+                                    </div>
+                                </button>
+                            </h2>
+                            <div id="reservation_@i" class="accordion-collapse collapse" data-bs-parent="#reservationAccordion_@i">
+                                <div class="accordion-body">
+                                    <ul>
+                                        @foreach (var book in reservation.Books)
+                                        {
+                                            <li>@book.Author.FirstName @book.Author.LastName - @book.Title</li>
+                                        }
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-3">
+                    <button id="start_button_@reservation.LoanId" class="btn btn-primary" onclick="startLoan(@reservation.LoanId)" role="button">Rozpocznij wypożyczenie</button>
+                </div>
+            </div>
+
+            i++;
+        }
+    }
+</div>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+<script src="~/js/reservationManager.js"></script>

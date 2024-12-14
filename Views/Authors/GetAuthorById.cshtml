@@ -1,0 +1,54 @@
+﻿@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@model LibraryApp.Models.DTOs.AuthorDTO
+
+@{
+    ViewData["Title"] = Model.FirstName + " " + Model.LastName + " - ";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<div class="container mt-5" style="max-width: 700px;">
+    <div class="row justify-content-center border p-3 align-items-center">
+        <div class="col">
+            <h1 style="font-size: 17px; font-weight:bold;" id="fullName">@Model.FirstName @Model.LastName</h1>
+            <div id="deleted-info" class="badge bg-danger d-none">Usunięty</div>
+        </div>
+        <div class="col text-end">
+            <button class="btn btn-danger" onclick="removeAuthor()">Usuń</button>
+        </div>
+    </div>
+    <div class="row justify-content-center border-start border-end border-bottom p-3 align-items-center">
+        <div class="col">
+            <h2 style="font-size: 16px;">Szczegóły</h2>
+            <div>
+                <span class="fw-bold">Imię (Imiona):</span>
+                <span id="firstName">@Model.FirstName</span>
+            </div>
+            <div>
+                <span class="fw-bold">Nazwisko:</span>
+                <span id="lastName">@Model.LastName</span>
+            </div>
+        </div>
+    </div>
+    <div class="row justify-content-center align-items-center border-start border-end border-bottom p-3">
+        <div class="col">
+            <form onsubmit="updateAuthor(event)" oninput="clearFeedback()">
+                <fieldset class="text-center">
+                    <h2 class="mb-3" style="font-size: 16px; font-weight: bold;">Edytuj dane tego autora</h2>
+                    <div class="mb-3">
+                        <label class="form-label" for="newFirstName">Imię (Imiona):</label>
+                        <input type="text" class="form-control" id="newFirstName" value="@Model.FirstName" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label" for="newLastName">Nazwisko:</label>
+                        <input type="text" class="form-control" id="newLastName" value=@Model.LastName required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Zaktualizuj</button>
+                    <div id="feedback" class="mt-3"></div>
+                </fieldset>
+            </form>
+        </div>
+    </div>
+</div>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+<script src="~/js/manageAuthor.js"></script>
